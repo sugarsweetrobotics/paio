@@ -1,3 +1,6 @@
 [submodule "test/Catch2"]
 	path = test/Catch2
 	url = https://github.com/catchorg/Catch2
+[submodule "thirdparty/cpp-httplib"]
+	path = thirdparty/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
