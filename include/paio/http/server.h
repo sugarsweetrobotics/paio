@@ -4,11 +4,9 @@
 #include <stdint.h>
 #include <memory>
 #include "client.h"
+#include <paio/paio.h>
 
 namespace paio {
-  template<class T>
-    using ptr = std::shared_ptr<T>;
-
   namespace http {
 
     struct Server {
@@ -18,6 +16,8 @@ namespace paio {
       Server(std::string&& addr, const uint32_t p): address(addr), port(p) {}
       virtual ~Server() {}
     };
+
+    using Server_ptr = paio::ptr<http::Server>;
 
     paio::ptr<http::Server> server(std::string&& address, const uint32_t port);
     
