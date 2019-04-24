@@ -1,0 +1,32 @@
+#pragma once
+
+#include <string>
+#include <stdint.h>
+#include <memory>
+#include "client.h"
+
+namespace paio {
+  template<class T>
+    using ptr = std::shared_ptr<T>;
+
+  namespace http {
+
+    struct Server {
+      std::string address;
+      uint16_t port;
+
+      Server(std::string&& addr, const uint16_t p): address(addr), port(p) {}
+      virtual ~Server() {}
+    };
+
+    paio::ptr<http::Server> server(std::string&& address, const uint16_t port);
+    
+    typedef std::function<Response(Request&&)> Callback;
+    
+    void serve(paio::ptr<http::Server>& server, const std::string& endpoint, const std::string& method, Callback cb);
+
+    void listen(paio::ptr<http::Server>& server);
+
+    void stop(paio::ptr<http::Server>& server);
+  };
+};
