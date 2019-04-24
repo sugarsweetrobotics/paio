@@ -13,13 +13,13 @@ namespace paio {
 
     struct Server {
       std::string address;
-      uint16_t port;
+      uint32_t port;
 
-      Server(std::string&& addr, const uint16_t p): address(addr), port(p) {}
+      Server(std::string&& addr, const uint32_t p): address(addr), port(p) {}
       virtual ~Server() {}
     };
 
-    paio::ptr<http::Server> server(std::string&& address, const uint16_t port);
+    paio::ptr<http::Server> server(std::string&& address, const uint32_t port);
     
     typedef std::function<Response(Request&&)> Callback;
     

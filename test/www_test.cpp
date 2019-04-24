@@ -56,7 +56,7 @@ SCENARIO( "HTTP Service", "[http]" ) {
 	  return http::Response(200, "Hello");
 	});
       port = http::listen(s, 1.0);
-
+      std::cout << "port is " << port << std::endl;
       THEN("Get Hello Message") {
 	auto r = http::get("localhost", port, "/");
 	REQUIRE(r.status == 200);
