@@ -13,6 +13,14 @@ http::Response http::get(std::string&& host, const uint16_t port, std::string&& 
   return http::Response(); // No Connection
 }
 
+http::Response http::put(std::string&& host, uint16_t port, std::string&& pattern, std::string&& body, std::string&& content_type) {
+  httplib::Client client(host.c_str(), port);
+  auto result = client.Put(pattern.c_str(), body.c_str(), content_type.c_str());
+  if (result) {
+    return http::Response(result->status, std::move(result->body));
+  }
+  return http::Response();
+}
 /*
 Response get(const std::string& url, const Request& request) {
 

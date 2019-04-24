@@ -25,7 +25,7 @@ namespace paio {
     
     void serve(paio::ptr<http::Server>& server, const std::string& endpoint, const std::string& method, Callback cb);
 
-    void listen(paio::ptr<http::Server>& server);
+    int listen(paio::ptr<http::Server>& server, double timeout);
 
     void stop(paio::ptr<http::Server>& server);
   };

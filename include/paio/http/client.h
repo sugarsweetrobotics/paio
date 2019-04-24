@@ -36,6 +36,7 @@
 
       //Response get(const std::string& url, const Request& request);
       Response get(std::string&& host, uint16_t port, std::string&& pattern);
+      Response put(std::string&& host, uint16_t port, std::string&& pattern, std::string&& body, std::string&& content_type);
       Response get(const std::string& url, const Request& request);
       Response put(const std::string& url, const Request& request);
       Response post(const std::string& url, const Request& request);
