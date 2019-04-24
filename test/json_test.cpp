@@ -54,4 +54,40 @@ SCENARIO( "JSON test", "[json]" ) {
     }
     
   }
+
+  GIVEN("JSON consturct") {
+    WHEN("int value added") {
+      auto j = json::document(json::uint32("int_value", 123));
+      THEN("int value is int value") {
+	REQUIRE(json::equals(json::get(j, "int_value"), 123));
+      }
+
+      THEN("stringified") {
+	REQUIRE(json::stringify(j) == "{\"int_value\":123}");
+      }
+    }
+
+    WHEN("double value added") {
+      auto j = json::document(json::float64("d_value", 123.45));
+      THEN("double value check") {
+	REQUIRE(json::equals(json::get(j, "d_value"), 123.45));
+      }
+
+      THEN("stringified") {
+	REQUIRE(json::stringify(j) == "{\"d_value\":123.45}");
+      }
+    }
+
+    WHEN("string value added") {
+      auto j = json::document(json::string("string_value", "foo"));
+      THEN("string value check") {
+	REQUIRE(json::equals(json::get(j, "string_value"), "foo"));
+      }
+
+      THEN("stringified") {
+	REQUIRE(json::stringify(j) == "{\"string_value\":\"foo\"}");
+      }
+    }
+
+  }
 }
