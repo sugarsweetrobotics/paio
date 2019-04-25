@@ -109,20 +109,41 @@ namespace paio {
       };
 
       using KeyValue_ptr = paio::ptr<KeyValue>;
+      using Allocator = std::function<KeyValue_ptr(Document_ptr&)>;
 
-      Document_ptr registerContent(Document_ptr&& d, const KeyValue_ptr c);
-
+      Document_ptr registerDocument(Document_ptr&& d, Allocator f);
       Document_ptr document();
-
+      
       template<typename First, typename... Rest>
 	Document_ptr document(const First& fst, const Rest&... rest) {
-	return registerContent(document(rest...), fst);
+	//return registerContent(document(rest...), fst);
+	return registerDocument(document(rest...), fst);
       }
+
+      Allocator object(std::string&& label);
+
+      Allocator registerContainer(Allocator o, Allocator f);
+
+      template<typename First, typename... Rest>
+	Allocator object(std::string&& label, const First& fst, const Rest&... rest) {
+	//return registerContent(document(rest...), fst);
+	return registerContainer(object(std::move(label), rest...), fst);
+      }
+
       
-      KeyValue_ptr uint32(std::string&& label, uint32_t value);
-      KeyValue_ptr string(std::string&& label, const char* value);
-      KeyValue_ptr float32(std::string&& label, float value);
-      KeyValue_ptr float64(std::string&& label, double value);
+      KeyValue_ptr int32_(std::string&& label, int32_t value);
+      KeyValue_ptr uint32_(std::string&& label, uint32_t value);
+      KeyValue_ptr string_(std::string&& label, const char* value, Document_ptr&& doc);
+      KeyValue_ptr float32_(std::string&& label, float value);
+      KeyValue_ptr float64_(std::string&& label, double value);
+
+      inline Allocator int32(std::string&& label, int32_t value) {
+	return [&](Document_ptr& d) { return int32_(std::move(label), value); };
+      }
+
+      inline Allocator float64(std::string&& label, double value) {
+	return [&](Document_ptr& d) { return float64_(std::move(label), value); };
+      }
       
       std::string stringify(const Document_ptr& d);
     };

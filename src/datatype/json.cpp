@@ -96,7 +96,6 @@ int32_t json::int32(const json::Container& j) {
   return _VALUE(j).GetInt();
 }
 
-
 float json::float32(const json::Container& j) {
   return _VALUE(j).GetDouble();
 }
@@ -109,6 +108,7 @@ json::Document_ptr json::document() {
   return json::Document_ptr(new JSONDocumentImpl());
 }
 
+/*
 json::Document_ptr json::registerContent(json::Document_ptr&& d, const json::KeyValue_ptr c) {
   //  std::cout << "value: " << _IMPL(c)->value.GetString() << std::endl;
   //_DOC(d).AddMember(rapidjson::Value().SetString(c->key.c_str(), c->key.length(), _DOC(d).GetAllocator()), _IMPL(c)->value, _DOC(d).GetAllocator());
@@ -117,7 +117,12 @@ json::Document_ptr json::registerContent(json::Document_ptr&& d, const json::Key
   //  std::cout << "json: " << json::stringify(d) << std::endl;
   return std::move(d);
 }
-
+*/
+json::Document_ptr json::registerDocument(json::Document_ptr&& d, json::Allocator f) {
+  auto c = f(d);
+  _DOC(d).AddMember(rapidjson::Value().SetString(c->key.c_str(), c->key.length(), _DOC(d).GetAllocator()), rapidjson::Value(_IMPL(c)->value, _DOC(d).GetAllocator()), _DOC(d).GetAllocator());
+  return std::move(d);
+}
 
 std::string json::stringify(const json::Document_ptr& d) {
   rapidjson::StringBuffer strbuf;
@@ -126,20 +131,68 @@ std::string json::stringify(const json::Document_ptr& d) {
   return strbuf.GetString();
 }
 
+json::Allocator json::object(std::string&& label) {
+  //  std::cout << "create!" << std::endl;
+  return [&label](json::Document_ptr& d){
+    //    std::cout << "just create" << std::endl;
+    return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value(rapidjson::kObjectType)))); 
+  };
+}
 
-json::KeyValue_ptr json::uint32(std::string&& label, uint32_t value) {
+json::Allocator json::registerContainer(json::Allocator o, json::Allocator f) {
+  //  std::cout << "register" << std::endl;
+  return [=](json::Document_ptr& d) { 
+    //    std::cout << "create oo, c" << std::endl;
+    auto oo = o(d);
+    //    std::cout << "hoge" << std::endl;
+    auto c = f(d);
+
+    _IMPL(oo)->value.AddMember(rapidjson::Value().SetString(c->key.c_str(), 
+						       c->key.length(), 
+						       _DOC(d).GetAllocator()),
+			  rapidjson::Value(_IMPL(c)->value,
+					   _DOC(d).GetAllocator()), 
+			       _DOC(d).GetAllocator());
+    return oo;
+  };
+}
+
+
+/// TODO: この辺の実装は考え直し．そもそもObject型を作る時にやっぱりdocumentが必要になる．
+///
+//
+//auto doc = json::object_document();
+//
+//doc = json::alloc("int_value", 123, doc);
+//doc = json::alloc("double_value", 12.3, doc);
+//
+// 引数を部分適用してやる
+//
+// auto doc = json::object_document(
+//                  json::bind(json::uint32, "int_value", 123),
+//                  json::bind(json::float64, "d_value", 12.34));
+//
+
+json::KeyValue_ptr json::uint32_(std::string&& label, uint32_t value) {
   //  std::cout << "Uint : " << value << std::endl;
   return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value(value))));
 }
 
-json::KeyValue_ptr json::string(std::string&& label, const char* value) {
+json::KeyValue_ptr json::int32_(std::string&& label, int32_t value) {
+  //  std::cout << "Uint : " << value << std::endl;
+  return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value(value))));
+}
+
+json::KeyValue_ptr json::string_(std::string&& label, const char* value, Document_ptr&& doc) {
   return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value().SetString(rapidjson::StringRef(value)))));
 }
 
-json::KeyValue_ptr json::float32(std::string&& label, float value) {
+json::KeyValue_ptr json::float32_(std::string&& label, float value) {
   return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value().SetDouble(value))));
 }
 
-json::KeyValue_ptr json::float64(std::string&& label, double value) {
+json::KeyValue_ptr json::float64_(std::string&& label, double value) {
   return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value().SetDouble(value))));
 }
+
+

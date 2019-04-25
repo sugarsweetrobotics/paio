@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <catch.hpp>
-
+#include <functional>
 #include <paio/datatype/json.h>
 
 using namespace paio;
@@ -57,27 +57,42 @@ SCENARIO( "JSON test", "[json]" ) {
 
   GIVEN("JSON consturct") {
     WHEN("int value added") {
-      auto j = json::document(json::uint32("int_value", 123));
+      auto doc = json::document(json::int32("int_value", 123));
       THEN("int value is int value") {
-	REQUIRE(json::equals(json::get(j, "int_value"), 123));
+	REQUIRE(json::equals(json::get(doc, "int_value"), 123));
       }
 
       THEN("stringified") {
-	REQUIRE(json::stringify(j) == "{\"int_value\":123}");
+	REQUIRE(json::stringify(doc) == "{\"int_value\":123}");
       }
     }
+
+    WHEN("object value added") {
+      auto doc = json::document(json::object("obj_value", json::int32("int_value", 123)));
+      THEN("object check") {
+	auto obj = json::get(doc, "obj_value");
+	REQUIRE(json::equals(json::get(obj, "int_value"), 123));
+      }
+
+      THEN("stringified") {
+	REQUIRE(json::stringify(doc) == "{\"obj_value\":{\"int_value\":123}}");
+      }
+
+    }
+
 
     WHEN("double value added") {
-      auto j = json::document(json::float64("d_value", 123.45));
+      auto doc = json::document(json::float64("d_value", 123.45));
       THEN("double value check") {
-	REQUIRE(json::equals(json::get(j, "d_value"), 123.45));
+	REQUIRE(json::equals(json::get(doc, "d_value"), 123.45));
       }
 
       THEN("stringified") {
-	REQUIRE(json::stringify(j) == "{\"d_value\":123.45}");
+	REQUIRE(json::stringify(doc) == "{\"d_value\":123.45}");
       }
     }
 
+    /*
     WHEN("string value added") {
       auto j = json::document(json::string("string_value", "foo"));
       THEN("string value check") {
@@ -87,7 +102,7 @@ SCENARIO( "JSON test", "[json]" ) {
       THEN("stringified") {
 	REQUIRE(json::stringify(j) == "{\"string_value\":\"foo\"}");
       }
-    }
+      } */
 
   }
 }
