@@ -18,7 +18,7 @@ void apply(httplib::Response& response, http::Response&& r) {
 }
 
 struct ServerImpl : public http::Server {
-  ServerImpl(std::string&& addr, const uint32_t p) : http::Server(std::forward<std::string>(addr), p) {}
+  ServerImpl(std::string&& addr, const int32_t p) : http::Server(std::forward<std::string>(addr), p) {}
   
   httplib::Server svr;
   std::thread server_thread;
@@ -34,7 +34,7 @@ struct ServerImpl : public http::Server {
 
 #define _IMPL(x) std::dynamic_pointer_cast<ServerImpl>(x)
 
-paio::ptr<http::Server> http::server(std::string&& address, const uint32_t port) {
+paio::ptr<http::Server> http::server(std::string&& address, const int32_t port) {
   auto s = paio::ptr<http::Server>(new ServerImpl(std::forward<std::string>(address), port));
   return s;
 }
@@ -42,11 +42,11 @@ paio::ptr<http::Server> http::server(std::string&& address, const uint32_t port)
 
 void http::serve(paio::ptr<http::Server>& server, const std::string& endpoint, const std::string& method, Callback cb) {
   if (method == "GET") {
-    std::dynamic_pointer_cast<ServerImpl>(server)->svr.Get(endpoint.c_str(), [&](const httplib::Request& req, httplib::Response& res) {
+    std::dynamic_pointer_cast<ServerImpl>(server)->svr.Get(endpoint.c_str(), [=](const httplib::Request& req, httplib::Response& res) {
 	apply(res, cb(convert(req)));
       });
   } else if (method == "PUT") {
-    std::dynamic_pointer_cast<ServerImpl>(server)->svr.Put(endpoint.c_str(), [&](const httplib::Request& req, httplib::Response& res) {
+    std::dynamic_pointer_cast<ServerImpl>(server)->svr.Put(endpoint.c_str(), [=](const httplib::Request& req, httplib::Response& res) {
 	apply(res, cb(convert(req)));
       });
   }
@@ -78,6 +78,8 @@ int http::listen(paio::ptr<http::Server>& server, double timeout) {
       //break;
     }
   }
+
+  std::cout << "okay" << std::endl;
   return port;
 }
 
