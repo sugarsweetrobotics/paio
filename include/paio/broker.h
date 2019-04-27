@@ -8,10 +8,10 @@
 namespace paio {
   
   struct Broker {
-    paio::http::Server_ptr server;
+    paio::http::Server_ptr http_server;
     double listen_timeout;
 
-  Broker(std::string&& host, int32_t port) : server(paio::http::server(std::move(host), port)) {
+  Broker(std::string&& host, int32_t port) : http_server(paio::http::server(std::move(host), port)) {
     }
     virtual ~Broker() {}
   };

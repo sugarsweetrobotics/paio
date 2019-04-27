@@ -9,7 +9,7 @@ const double default_listen_timeout = 1.0;
 
 Broker_ptr paio::broker(std::string&& host, int32_t port) {
   auto broker = Broker_ptr(new Broker(std::move(host), port));
-  http::serve(broker->server, "/version", "GET", [=](http::Request&& r) { 
+  http::serve(broker->http_server, "/version", "GET", [=](http::Request&& r) { 
       return http::Response(200, paio::version()); 
     } );
 
@@ -25,7 +25,7 @@ Broker_ptr copy(const Broker_ptr broker) {
 */ 
   
 Broker_ptr paio::run(Broker_ptr& broker) {
-  http::listen(broker->server, broker->listen_timeout);
+  http::listen(broker->http_server, broker->listen_timeout);
   return broker;
 }
 
