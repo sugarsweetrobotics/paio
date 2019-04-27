@@ -4,7 +4,7 @@ set(http_srcs ${http_src} PARENT_SCOPE)
 set(datatype_src datatype/json.cpp)
 set(datatype_srcs ${datatype_src} PARENT_SCOPE)
 
-set(broker_src broker.cpp)
+set(broker_src broker.cpp object_broker.cpp)
 set(broker_srcs ${broker_src} PARENT_SCOPE)
 
 include_directories(${CMAKE_SOURCE_DIR}/thirdparty/cpp-httplib)
