@@ -10,4 +10,16 @@ namespace paio {
   inline std::string version() {
     return "1.0.0";
   }
+
+  template<typename T, typename F>
+    std::function<T(T)> pipe() {
+    return [&](T&& t) { return t; };
+  }
+  template<typename T, typename F, typename... R>
+    std::function<T(T)> pipe(F fst, R... remain) {
+    return [&](T&& t) { 
+      return pipe(remain...)(fst(t));
+    };
+  }
+  
 };

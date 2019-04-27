@@ -21,14 +21,14 @@ namespace paio {
 
     using Server_ptr = paio::ptr<http::Server>;
 
-    paio::ptr<http::Server> server(std::string&& address, const int32_t port);
+    Server_ptr server(std::string&& address, const int32_t port);
     
     typedef std::function<Response(Request&&)> Callback;
     
-    void serve(paio::ptr<http::Server>& server, const std::string& endpoint, const std::string& method, Callback cb);
+    Server_ptr serve(Server_ptr&& server, const std::string& endpoint, const std::string& method, Callback cb);
 
-    int listen(paio::ptr<http::Server>& server, double timeout);
+    Server_ptr listen(Server_ptr&& server, double timeout);
 
-    void stop(paio::ptr<http::Server>& server);
+    Server_ptr  stop(Server_ptr&& server);
   };
 };
