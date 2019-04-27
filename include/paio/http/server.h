@@ -15,10 +15,8 @@ namespace paio {
 
       Server() {}
       Server(std::string&& addr, const int32_t p): address(addr), port(p) {}
-    Server(Server&& s) : address(s.address), port(s.port) {}
+      Server(Server&& s) : address(s.address), port(s.port) {}
       virtual ~Server() {}
-
-      
     };
 
     using Server_ptr = paio::ptr<http::Server>;

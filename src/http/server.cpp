@@ -18,17 +18,27 @@ void apply(httplib::Response& response, http::Response&& r) {
 }
 
 struct ServerImpl : public http::Server {
-  ServerImpl(std::string&& addr, const int32_t p) : http::Server(std::forward<std::string>(addr), p) {}
+  ServerImpl(std::string&& addr, const int32_t p) : http::Server(std::forward<std::string>(addr), p),
+						    svr(new httplib::Server()), 
+						    server_thread(nullptr) {
+  }
+
+  ServerImpl(ServerImpl&& s) : http::Server(std::forward<http::Server>(s)), 
+			       svr(std::move(s.svr)), 
+			       server_thread(std::move(s.server_thread)) {
+  }
   
-  httplib::Server svr;
-  std::thread server_thread;
 
   virtual ~ServerImpl() {
-    if (svr.is_running()) {
-      svr.stop();
-      server_thread.join();
+    if (svr->is_running()) {
+      svr->stop();
+      server_thread->join();
     }
   }
+
+  std::unique_ptr<httplib::Server> svr;
+  std::unique_ptr<std::thread> server_thread;
+
 };
 
 
@@ -42,11 +52,11 @@ paio::ptr<http::Server> http::server(std::string&& address, const int32_t port) 
 
 void http::serve(paio::ptr<http::Server>& server, const std::string& endpoint, const std::string& method, Callback cb) {
   if (method == "GET") {
-    std::dynamic_pointer_cast<ServerImpl>(server)->svr.Get(endpoint.c_str(), [=](const httplib::Request& req, httplib::Response& res) {
+    std::dynamic_pointer_cast<ServerImpl>(server)->svr->Get(endpoint.c_str(), [=](const httplib::Request& req, httplib::Response& res) {
 	apply(res, cb(convert(req)));
       });
   } else if (method == "PUT") {
-    std::dynamic_pointer_cast<ServerImpl>(server)->svr.Put(endpoint.c_str(), [=](const httplib::Request& req, httplib::Response& res) {
+    std::dynamic_pointer_cast<ServerImpl>(server)->svr->Put(endpoint.c_str(), [=](const httplib::Request& req, httplib::Response& res) {
 	apply(res, cb(convert(req)));
       });
   }
@@ -55,21 +65,21 @@ void http::serve(paio::ptr<http::Server>& server, const std::string& endpoint, c
 
 int http::listen(paio::ptr<http::Server>& server, double timeout) {
   int port = server->port;
-  _IMPL(server)->server_thread = std::thread([&] { 
+  _IMPL(server)->server_thread = std::unique_ptr<std::thread>(new std::thread([&] { 
       if (port == 0) {
-	port = _IMPL(server)->svr.bind_to_any_port(server->address.c_str(), 0);
-	if (_IMPL(server)->svr.listen_after_bind()) {
+	port = _IMPL(server)->svr->bind_to_any_port(server->address.c_str(), 0);
+	if (_IMPL(server)->svr->listen_after_bind()) {
 	}
       } else {
-	if (_IMPL(server)->svr.listen(server->address.c_str(), server->port)) {
+	if (_IMPL(server)->svr->listen(server->address.c_str(), server->port)) {
 	}
       }
-    });
+      }));
 
   auto t = std::chrono::system_clock::now();
   for(;;) {
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    if (_IMPL(server)->svr.is_running()) break;
+    if (_IMPL(server)->svr->is_running()) break;
   
     auto d = std::chrono::system_clock::now() - t;
     int to = (int)(timeout*1000);
@@ -86,7 +96,7 @@ int http::listen(paio::ptr<http::Server>& server, double timeout) {
 
 void http::stop(paio::ptr<http::Server>& server) {
 
-  _IMPL(server)->svr.stop();
-  _IMPL(server)->server_thread.join();
+  _IMPL(server)->svr->stop();
+  _IMPL(server)->server_thread->join();
 
 }
