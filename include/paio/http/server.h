@@ -12,10 +12,11 @@ namespace paio {
     struct Server {
       std::string address;
       int32_t port;
+      bool failed;
 
-      Server() {}
-      Server(std::string&& addr, const int32_t p): address(addr), port(p) {}
-      Server(Server&& s) : address(s.address), port(s.port) {}
+    Server(): failed(false) {}
+    Server(std::string&& addr, const int32_t p): address(addr), port(p), failed(false) {}
+    Server(Server&& s) : address(s.address), port(s.port), failed(false) {}
       virtual ~Server() {}
     };
 
@@ -25,10 +26,16 @@ namespace paio {
     
     typedef std::function<Response(Request&&)> Callback;
     
-    Server_ptr serve(Server_ptr&& server, const std::string& endpoint, const std::string& method, Callback cb);
+    std::function<Server_ptr(Server_ptr&&)> serve(const std::string& endpoint, const std::string& method, Callback cb);
+    inline Server_ptr serve(const std::string& endpoint, const std::string& method, Callback cb, Server_ptr&& server) {
+      return serve(endpoint, method, cb)(std::move(server));
+    }
 
-    Server_ptr listen(Server_ptr&& server, double timeout);
+    std::function<Server_ptr(Server_ptr&&)> listen(double timeout);
+    inline Server_ptr listen(double timeout, Server_ptr&& server) {
+      return listen(timeout)(std::move(server));
+    }
 
-    Server_ptr  stop(Server_ptr&& server);
+    std::function<Server_ptr(Server_ptr&&)>  stop();
   };
 };

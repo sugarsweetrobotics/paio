@@ -13,11 +13,11 @@ SCENARIO( "HTTP Service", "[http]" ) {
   GIVEN("With Server") {
     int port = 9559;
     auto s = http::server("localhost", port);
-    s = http::serve(std::move(s), "/", "GET", [&](http::Request&& r) {
+    s = http::serve("/", "GET", [&](http::Request&& r) {
 	return http::Response(200, "Hello");
-      });
+      }, std::move(s));
     
-    s = http::listen(std::move(s), 1.0);
+    s = http::listen(1.0, std::move(s));
     
     THEN("Can access to server") {
       auto r = http::get("localhost", port, "/");

@@ -13,20 +13,14 @@ Broker_ptr paio::broker(std::string&& host, int32_t port) {
   return broker;
 }
 
-/*
-Broker_ptr copy(const Broker_ptr broker) {
-  auto b = broker(broker->host, broker->port);
-} 
-*/ 
-  
 Broker_ptr paio::run(Broker_ptr& broker) {
 
-  broker->http_server = http::serve(std::move(broker->http_server), "/version", "GET", [=](http::Request&& r) { 
+  broker->http_server = http::serve("/version", "GET", [=](http::Request&& r) { 
       return http::Response(200, paio::version()); 
-    } );
+    },std::move(broker->http_server));
   broker->listen_timeout = default_listen_timeout;
 
-  broker->http_server = http::listen(std::move(broker->http_server), broker->listen_timeout);
+  broker->http_server = http::listen( broker->listen_timeout, std::move(broker->http_server));
   return broker;
 }
 
