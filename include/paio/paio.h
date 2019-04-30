@@ -12,11 +12,11 @@ namespace paio {
   }
 
   template<typename T, typename F>
-    std::function<T(T)> pipe() {
+    std::function<T(T)> compose() {
     return [&](T&& t) { return t; };
   }
   template<typename T, typename F, typename... R>
-    std::function<T(T)> pipe(F fst, R... remain) {
+    std::function<T(T)> compose(F fst, R... remain) {
     return [&](T&& t) { 
       return pipe(remain...)(fst(t));
     };
