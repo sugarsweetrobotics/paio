@@ -183,7 +183,7 @@ json::KeyValue_ptr json::int32_(std::string&& label, int32_t value) {
   return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value(value))));
 }
 
-json::KeyValue_ptr json::string_(std::string&& label, const char* value, Document_ptr&& doc) {
+json::KeyValue_ptr json::string_(std::string&& label, const char* value, Document_ptr& doc) {
   return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value().SetString(rapidjson::StringRef(value)))));
 }
 

@@ -133,7 +133,7 @@ namespace paio {
       
       KeyValue_ptr int32_(std::string&& label, int32_t value);
       KeyValue_ptr uint32_(std::string&& label, uint32_t value);
-      KeyValue_ptr string_(std::string&& label, const char* value, Document_ptr&& doc);
+      KeyValue_ptr string_(std::string&& label, const char* value, Document_ptr& doc);
       KeyValue_ptr float32_(std::string&& label, float value);
       KeyValue_ptr float64_(std::string&& label, double value);
 
@@ -143,6 +143,14 @@ namespace paio {
 
       inline Allocator float64(std::string&& label, double value) {
 	return [&](Document_ptr& d) { return float64_(std::move(label), value); };
+      }
+
+      inline Allocator string(std::string&& label, std::string&& value) {
+	return [&](Document_ptr& d) { return string_(std::move(label), value.c_str(), d); };
+      }
+
+      inline Allocator string(std::string&& label, const std::string& value) {
+	return [&](Document_ptr& d) { return string_(std::move(label), value.c_str(), d); };
       }
       
       std::string stringify(const Document_ptr& d);

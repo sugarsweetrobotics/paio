@@ -26,6 +26,21 @@ SCENARIO( "HTTP Service", "[http]" ) {
     }
   }
   
+  GIVEN("With Server (functional style)") {
+    int port = 9557;
+    auto t = paio::compose<http::Server_ptr>(http::listen(1.0),
+					     http::serve("/", "GET", [&](http::Request&& r) {
+						 return http::Response(200, "Hello");
+					       }));
+    auto s = t(http::server("localhost", port));
+			   
+    THEN("Can access to server") {
+      auto r = http::get("localhost", port, "/");
+      REQUIRE(r.status == 200);
+      REQUIRE(r.body == "Hello");
+    }
+  }
+  
   
   /*
     GIVEN("With Server") {
