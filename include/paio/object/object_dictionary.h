@@ -1,6 +1,6 @@
 #pragma once
 
-#include <paio/object.h>
+#include <paio/paio.h>
 
 namespace paio {
 
@@ -11,6 +11,7 @@ namespace paio {
   };
 
 
-  
+  using ObjectDictionary_ptr = paio::ptr<ObjectDictionary>;
 
+  ObjectDictionary_ptr object_dictionary();
 };

@@ -1,18 +1,21 @@
+#include <iostream>
 #include <paio/ec/periodic_execution_context.h>
 
-
-//using namespace paio;
-
-void paio::attach(paio::PeriodicExecutionContext& ec, paio::PaioFuncType cb) {
-  ec.cbs.push_back(cb);
+paio::PeriodicExecutionContext paio::periodic_ec(double rate) {
+  return paio::PeriodicExecutionContext(rate, paio::object_dictionary());
 }
 
+void paio::attach(paio::PeriodicExecutionContext& ec, paio::process::Process&& proc) {
+  std::cout << "attaching" << std::endl;
+  ec.procs.push_back(std::move(proc));
+  std::cout << "attached" << std::endl;
+}
 
-int paio::start(const paio::PeriodicExecutionContext& pec) {
+int paio::start(paio::PeriodicExecutionContext& pec) {
+  std::cout << "starting.." << std::endl;
   while(true) {
-    for(auto cb : pec.cbs) {
-      auto c = paio::datatype::json::document();
-      auto r = cb(std::move(c));
+    for(auto& proc : pec.procs) {
+      paio::process::apply(std::move(proc));
     }
   }
 }

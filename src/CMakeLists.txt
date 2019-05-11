@@ -10,6 +10,8 @@ set(ec_srcs ${ec_src} PARENT_SCOPE)
 set(process_src process/process.cpp)
 set(process_srcs ${process_src} PARENT_SCOPE)
 
+set(object_src object/object_dictionary.cpp)
+set(object_srcs ${object_src} PARENT_SCOPE)
 
 set(broker_src broker.cpp object_broker.cpp)
 set(broker_srcs ${broker_src} PARENT_SCOPE)
@@ -35,7 +37,10 @@ target_link_libraries(paio_ec Threads::Threads)
 add_library(paio_process ${process_src})
 target_link_libraries(paio_process Threads::Threads)
 
+add_library(paio_object ${object_src})
+target_link_libraries(paio_object Threads::Threads)
+
 add_library(paio_broker ${broker_src})
 target_link_libraries(paio_broker Threads::Threads ${paio_http_libs})
 
-set(PAIO_LIBRARIES paio_http paio_datatype paio_ec paio_process paio_broker PARENT_SCOPE)
+set(PAIO_LIBRARIES paio_http paio_datatype paio_ec paio_process paio_object paio_broker PARENT_SCOPE)

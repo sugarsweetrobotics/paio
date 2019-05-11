@@ -2,18 +2,25 @@
 
 #include <paio/datatype/json.h>
 #include <paio/process/process.h>
+#include <paio/object/object_dictionary.h>
 
 namespace paio {
 
   //using paio_func = std::function<paio::datatype::json::Document_ptr(paio::datatype::json::Document_ptr&&)>;
 
   struct PeriodicExecutionContext {
-    uint32_t rate;
-    std::vector<paio::PaioFuncType> cbs;
-    PeriodicExecutionContext(uint32_t r) : rate(r) {}
+    double rate;
+    std::vector<paio::process::Process> procs;
+
+
+    ObjectDictionary_ptr od;
+  PeriodicExecutionContext(double r, ObjectDictionary_ptr&& od) : rate(r), od(od) {}
   };
 
-  void attach(paio::PeriodicExecutionContext& ec, paio::PaioFuncType cb);
-  int start(const paio::PeriodicExecutionContext& pec);
+  paio::PeriodicExecutionContext periodic_ec(double rate);
+
+
+  void attach(paio::PeriodicExecutionContext& ec, paio::process::Process&& procs);
+  int start(paio::PeriodicExecutionContext& pec);
 
 };
