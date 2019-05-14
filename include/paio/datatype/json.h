@@ -20,10 +20,6 @@ namespace paio {
 	virtual ~Document() {}
       };
 
-      Document_ptr parse(std::string&& s);
-
-
-
       struct Object;
       using Object_ptr = paio::ptr<Object>;
 
@@ -33,20 +29,40 @@ namespace paio {
       };
 
       struct Container {
-	const Object_ptr _ptr;
-        Container(Object_ptr&& p) :_ptr(p) {}
-        Container(Container&& c) : _ptr(c._ptr) {}
-	Container operator[](int i) { return Container(_ptr->get(i)); }
+	Document_ptr _d_ptr;
+	Object_ptr _ptr;
+
+      Container() : _ptr(nullptr), _d_ptr(nullptr) {}
+      Container(Object_ptr&& p) :_ptr(p), _d_ptr(nullptr) {}
+      Container(Document_ptr&& p) :_d_ptr(p), _ptr(nullptr) {}
+      Container(Container&& c) : _ptr(c._ptr), _d_ptr(c._d_ptr) {}
+	Container(const Container& c) {
+	  _copyFrom(c);
+	}
+	Container& operator=(const Container& c) {
+	  _copyFrom(c);
+	  return *this;
+	}
+
+	  void _copyFrom(const Container& c) {
+	    _ptr = c._ptr;
+	    _d_ptr = c._d_ptr;
+	  }
+      Container operator[](int i) { 
+	if (_ptr) {
+	return Container(_ptr->get(i)); 
+	} else {
+	  return Container(Object_ptr(nullptr));
+	}
+      }
       };
 
+      Container parse(std::string&& s);
+      //      Container get(const Document_ptr& j, std::string&& label);
+      std::vector<std::string> keys(Container& doc);
 
-
-
-      Container get(const Document_ptr& jobj, std::string&& label);
-
-      Container get(const Container& j, std::string&& label);
+      Container get(const Container& j, const std::string& label);
       
-
       std::string string(const Container& v);
       int32_t   int32(const Container& v);
       uint32_t  uint32(const Container& v);
@@ -72,7 +88,7 @@ namespace paio {
 	inline double value<double>(const Container& v) { return float64(v); }
 
 
-      inline bool is_nil(const Container& v) { return v._ptr == nullptr; }
+      inline bool is_nil(const Container& v) { return v._ptr == nullptr && v._d_ptr == nullptr; }
 
       /*
       inline bool equals(const Container& c, uint32_t v) {
@@ -105,17 +121,18 @@ namespace paio {
       struct KeyValue {
 	std::string key;
       KeyValue(std::string&& key) : key(key) {}
+      KeyValue(const std::string& key) : key(key) {}
 	virtual ~KeyValue() {}
       };
 
       using KeyValue_ptr = paio::ptr<KeyValue>;
       using Allocator = std::function<KeyValue_ptr(Document_ptr&)>;
 
-      Document_ptr registerDocument(Document_ptr&& d, Allocator f);
-      Document_ptr document();
+      Container registerDocument(Container&& d, Allocator f);
+      Container document();
       
       template<typename First, typename... Rest>
-	Document_ptr document(const First& fst, const Rest&... rest) {
+	Container document(const First& fst, const Rest&... rest) {
 	//return registerContent(document(rest...), fst);
 	return registerDocument(document(rest...), fst);
       }
@@ -153,7 +170,17 @@ namespace paio {
 	return [&](Document_ptr& d) { return string_(std::move(label), value.c_str(), d); };
       }
       
-      std::string stringify(const Document_ptr& d);
+      std::string stringify(const Container& d);
+
+      template<typename T>
+	std::vector<T> map(Container& doc, std::function<T(Container)> f) {
+	std::vector<T> v;
+	auto ks = keys(doc);
+	for(auto& k : ks) {
+	  v.push_back(f(get(doc, std::move(k))));
+	}
+	return v;
+      }
     };
     
 

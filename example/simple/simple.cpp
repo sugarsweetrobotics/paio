@@ -1,4 +1,5 @@
 #include <iostream>
+#include <utility>
 #include <paio/paio.h>
 #include <paio/datatype/json.h>
 #include <paio/process/process.h>
@@ -6,35 +7,67 @@
 
 #include "Message.h"
 
-const std::string topic_name = "my_message";
 
-
-paio::process::Process&& process(std::function<simple::Message()> f) {
-  std::cout << "building" << std::endl;
-  return std::move(paio::process::process([&](paio::datatype::json::Document_ptr&& d) { 
-	std::cout << "yheah" << std::endl;
-
-	return simple::retn(f()); }
-				));
+template<typename T>
+paio::process::Process echo_process(const std::string name, T f) {
+  return paio::process::process(name, [&f](auto&& _) {
+      return simple::retn(f());
+    });
 }
 
-  /*
-paio::process::Process process(std::function<simple::Message()> func) {
-  return paio::process::process([&](paio::datatype::json::Document_ptr&& d) {
-      return simple::retn(topic_name, func());
-    });
-    }*/
+template<typename T>
+paio::process::Process modify_process(const std::string name, const std::string& topic, T f) {
+  return paio::process::process(name, 
+				[&f, topic](auto&& d) { 
+				  return simple::retn(f(simple::get(d[topic])));
+				},
+				paio::process::reads(topic)
+				);
+}
 
-int main(void) {
+template<typename T>
+paio::process::Process print_process(const std::string name, const std::string& topic, T f) {
+  return paio::process::process(name, 
+				[&f, topic](auto&& d) { 
+				  f(simple::get(d[topic]));
+				  return paio::datatype::json::Container();
+				},
+				paio::process::reads(topic)
+				);
+}
+
+
+
+int main(const int argc, const char* argv[]) {
   std::cout << "PAIO Simple Example Starts version " << paio::version() << std::endl;
+  auto p = paio::paio(argc, argv);
+  auto pec2 = paio::attach(paio::periodic_ec(1.0), 
+			   ::echo_process("my_echo", 
+				     []() {
+				       std::cout << "- my_echo" << std::endl;
+				       std::string hello = "hello";
+				       std::cout << " set message :" << hello << std::endl;
+				       return std::make_pair("my_message1", simple::Message(hello));
+				     })
+			   );
 
-  auto pec = paio::periodic_ec(1.0);
-  std::cout << "test1" << std::endl;
-  paio::attach(pec, ::process([]() {
-      std::cout << "Hello PAIO" << std::endl;
-      return simple::Message({"Hello PAIO"});
-      }));
+  auto pec3 = paio::attach(std::move(pec2), 
+		      ::modify_process("my_modify", "my_message1",
+				      [](simple::Message&& msg) {
+					std::cout << "- my_modify" << std::endl;
+					std::cout << " msg is :" << msg.msg << std::endl;
+					return std::make_pair("my_message2", simple::Message(msg.msg + " modified"));
+				      })
+		      );
 
-  //  std::cout << "attached" << std::endl;
-  return paio::start(pec);
+  auto pec4 = paio::attach(std::move(pec3), 
+			   ::print_process("my_print", "my_message2",
+					   [](simple::Message&& msg) {
+				       std::cout << "- my_print" << std::endl;
+				       std::cout << " msg is :" << msg.msg << std::endl;
+				       //return std::make_pair("my_message2", simple::Message({"Hello PAIO2"}));
+				     })
+			   );
+
+  return paio::start(pec4);
 }

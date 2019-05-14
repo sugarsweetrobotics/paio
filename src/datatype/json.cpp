@@ -42,6 +42,10 @@ struct KeyValueImpl : public json::KeyValue {
   KeyValueImpl(std::string&& key, rapidjson::Value&& value) : json::KeyValue(std::move(key)) {
     this->value = value;
   }
+
+  KeyValueImpl(const std::string& key, rapidjson::Value&& value) : json::KeyValue(key) {
+    this->value = value;
+  }
 };
 
 
@@ -52,29 +56,48 @@ inline paio::ptr<JSONObjectImpl> _IMPL(const json::Container& x) {return std::dy
 inline rapidjson::Document& _DOC(const json::Document_ptr& d) { return _IMPL(d)->doc; }
 inline const rapidjson::Value& _VALUE(const json::Container& c) { return _IMPL(c)->value; }
 
-json::Document_ptr json::parse(std::string&& s) {
-  return json::Document_ptr(new JSONDocumentImpl(s));
+json::Container json::parse(std::string&& s) {
+  return Container(json::Document_ptr(new JSONDocumentImpl(s)));
 }
 
-json::Container json::get(const json::Document_ptr& j, std::string&& label) {
-  if (_DOC(j).IsNull()) {
-    return json::Container(nullptr);
-  } else if (_DOC(j).HasMember(label.c_str())) {
-    //    std::cout << "doc:" << json::stringify(j) << std::endl;
-    return json::Container(json::Object_ptr(new JSONObjectImpl(_DOC(j)[label.c_str()])));
-  } else {
-    return json::Container(nullptr);
+std::vector<std::string> json::keys(Container& c) {
+  std::vector<std::string> v;
+  if (c._d_ptr) {
+    auto doc = c._d_ptr;
+    for (auto iter = _DOC(doc).MemberBegin(); iter != _DOC(doc).MemberEnd(); ++iter){
+      v.push_back(iter->name.GetString());
+    }
+  } else if(c._ptr) {
+    for (auto iter = _VALUE(c).MemberBegin(); iter != _VALUE(c).MemberEnd(); ++iter){
+      v.push_back(iter->name.GetString());
+    }
+
   }
+  return std::move(v);
 }
 
-json::Container json::get(const json::Container& j, std::string&& label) {
+//json::Container json::get(const json::Document_ptr& j, std::string&& label) {
+//}
+
+json::Container json::get(const json::Container& j, const std::string& label) {
+  if (j._d_ptr) {
+   if (_DOC(j._d_ptr).HasMember(label.c_str())) {
+    //    std::cout << "doc:" << json::stringify(j) << std::endl;
+    return json::Container(json::Object_ptr(new JSONObjectImpl(_DOC(j._d_ptr)[label.c_str()])));
+  } else {
+    return json::Container();
+  }
+
+  } else  if (j._ptr) {
   if (_VALUE(j).IsNull()) {
-    return json::Container(nullptr);
+    return json::Container();
   } else if (_VALUE(j).HasMember(label.c_str())) {
     return json::Container(json::Object_ptr(new JSONObjectImpl(_VALUE(j)[label.c_str()])));
   } else {
-    return json::Container(nullptr);
+    return json::Container();
   }
+  }
+  return json::Container();
 }
 
 
@@ -104,8 +127,8 @@ double json::float64(const json::Container& j) {
   return _VALUE(j).GetDouble();
 }
 
-json::Document_ptr json::document() {
-  return json::Document_ptr(new JSONDocumentImpl());
+json::Container json::document() {
+  return Container(json::Document_ptr(new JSONDocumentImpl()));
 }
 
 /*
@@ -118,17 +141,31 @@ json::Document_ptr json::registerContent(json::Document_ptr&& d, const json::Key
   return std::move(d);
 }
 */
-json::Document_ptr json::registerDocument(json::Document_ptr&& d, json::Allocator f) {
-  auto c = f(d);
+json::Container json::registerDocument(json::Container&& cc, json::Allocator f) {
+  auto d = cc._d_ptr;
+  auto c = f(cc._d_ptr);
   _DOC(d).AddMember(rapidjson::Value().SetString(c->key.c_str(), c->key.length(), _DOC(d).GetAllocator()), rapidjson::Value(_IMPL(c)->value, _DOC(d).GetAllocator()), _DOC(d).GetAllocator());
-  return std::move(d);
+  return json::Container(std::move(d));
 }
 
-std::string json::stringify(const json::Document_ptr& d) {
-  rapidjson::StringBuffer strbuf;
-  rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
-  _DOC(d).Accept(writer);
+std::string json::stringify(const json::Container& c) {
+  if (!c._d_ptr && !c._ptr) {
+    std::cout << "Currently Container w/o pointer can not be stringified" << std::endl;
+    return "null";
+  }
+
+  if (c._d_ptr) {
+    auto d = c._d_ptr;
+    rapidjson::StringBuffer strbuf;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+    _DOC(d).Accept(writer);
+    return strbuf.GetString();
+  }
+    rapidjson::StringBuffer strbuf;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(strbuf);
+  _IMPL(c)->value.Accept(writer);
   return strbuf.GetString();
+
 }
 
 json::Allocator json::object(std::string&& label) {
@@ -184,7 +221,8 @@ json::KeyValue_ptr json::int32_(std::string&& label, int32_t value) {
 }
 
 json::KeyValue_ptr json::string_(std::string&& label, const char* value, Document_ptr& doc) {
-  return json::KeyValue_ptr(new KeyValueImpl(std::move(label), std::move(rapidjson::Value().SetString(rapidjson::StringRef(value)))));
+  return json::KeyValue_ptr(new KeyValueImpl(std::move(label), 
+					     std::move(rapidjson::Value().SetString(rapidjson::StringRef(value), _DOC(doc).GetAllocator()))));
 }
 
 json::KeyValue_ptr json::float32_(std::string&& label, float value) {

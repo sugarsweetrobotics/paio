@@ -30,6 +30,12 @@ SCENARIO( "JSON test", "[json]" ) {
 
     WHEN("JSON Parsed") {
       auto j = json::parse(s_json);
+
+      THEN("Keys") {
+	auto ks = json::keys(j);
+	REQUIRE(std::find(ks.begin(), ks.end(), "string") != ks.end());
+      }
+
       THEN("Simple Data") {
 	REQUIRE(json::string(json::get(j, "string")) == "foo");
 	REQUIRE(json::uint32(json::get(j, "number")) == 123);

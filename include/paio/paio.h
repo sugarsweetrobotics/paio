@@ -53,4 +53,16 @@ namespace paio {
     };
   }
 
+  
+};
+
+
+namespace paio {
+  struct Paio {
+    
+  };
+
+  inline Paio paio(const int argc, const char* argv[]) {
+    return Paio();
+  };
 };
