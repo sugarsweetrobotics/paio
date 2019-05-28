@@ -1,8 +1,10 @@
 #pragma once
 #include <iostream>
 #include <map>
-#include <paio/paio.h>
-
+//#include <paio/paio.h>
+#include "paio/ptr.h"
+#include "paio/version.h"
+#include "paio/functional.h"
 #include <paio/datatype/json.h>
 
 

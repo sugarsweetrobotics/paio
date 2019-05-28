@@ -1,9 +1,9 @@
 #include <iostream>
 #include <utility>
 #include <paio/paio.h>
-#include <paio/datatype/json.h>
-#include <paio/process/process.h>
-#include <paio/ec/periodic_execution_context.h>
+
+
+
 
 #include "Message.h"
 
@@ -35,8 +35,6 @@ paio::process::Process print_process(const std::string name, const std::string& 
 				paio::process::reads(topic)
 				);
 }
-
-
 
 int main(const int argc, const char* argv[]) {
   std::cout << "PAIO Simple Example Starts version " << paio::version() << std::endl;
