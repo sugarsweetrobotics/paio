@@ -1,13 +1,26 @@
 #pragma once
 
-#include <paio/paio.h>
+#include "paio/datatype/json.h"
 
 namespace paio {
 
+  template<typename T>
+    struct Object {
+    private:
+      T privateData;
+      paio::datatype::json::Container c;
+      
+    public:
 
-  struct Object {
-  };
+      T does() {
+	return std::move(privateData);
+      }
 
-  using Object_ptr = paio::ptr<Object>;
-
+      template<typename... P>
+      T does(std::function<T(T&&)> f, P&... rem) {
+	return f(does(rem...));
+      }
+      
+      
+    };
 };

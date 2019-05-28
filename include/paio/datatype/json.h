@@ -1,6 +1,8 @@
 #pragma once
 
-#include <paio/paio.h>
+//#include <paio/paio.h>
+#include "paio/ptr.h"
+#include <vector>
 
 #include <stdint.h>
 #include <string>
