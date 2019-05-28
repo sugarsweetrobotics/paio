@@ -1,6 +1,6 @@
 #pragma once
 
-#include <paio/datatype/json.h>
+#include "paio/datatype/json.h"
 #include <string>
 
 namespace simple {
@@ -24,11 +24,15 @@ namespace simple {
       }
       return *this;
     }
+  public:
+    static paio::datatype::json::Container retn(std::tuple<std::string, simple::Message>&& msg);
+
+    operator std::string() { return "Message(msg=\"" + msg + "\")"; }
   };
 
   inline paio::datatype::json::Container toJson(const simple::Message& msg) {
-    return paio::datatype::json::document(paio::datatype::json::object(paio::datatype::json::string("__class__", "Message"),
-								       paio::datatype::json::string("msg", msg.msg)));
+    return paio::datatype::json::document(paio::datatype::json::string("__class__", "Message"),
+					  paio::datatype::json::string("msg", msg.msg));
   }
       
   inline simple::Message fromJson(const paio::datatype::json::Container& c) {
@@ -37,7 +41,9 @@ namespace simple {
     return std::move(value);
   }
 
-  inline paio::datatype::json::Container retn(std::tuple<std::string, simple::Message>&& msg) {
+  inline paio::datatype::json::Container Message::retn(std::tuple<std::string, simple::Message>&& msg) {
+    std::cout << "Message::retn()" << std::endl;
+    //    std::cout << "retn(" << std::get<0>(msg) << ", " << (std::string)std::get<1>(msg) << std::endl;
     return paio::datatype::json::document(paio::datatype::json::object(std::forward<std::string>(std::get<0>(msg)), 
 								       paio::datatype::json::string("__class__", "Message"),
 								       paio::datatype::json::string("msg", std::get<1>(msg).msg))); 
