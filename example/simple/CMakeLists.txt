@@ -1,4 +1,4 @@
-set(simple_src simple.cpp)
+set(simple_src simple2main.cpp echo.cpp)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
